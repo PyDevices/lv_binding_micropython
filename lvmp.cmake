@@ -14,27 +14,21 @@ set(LV_BINDINGS_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(LVGL_DIR ${LV_BINDINGS_DIR}/lvgl)
 set(LV_MP ${CMAKE_BINARY_DIR}/lv_mp.c)
 set(LV_INCLUDE ${LV_BINDINGS_DIR})
-set(LV_SRC ${LV_MP})
-set(LV_MP ${CMAKE_BINARY_DIR}/lv_mp.c)
 set(LV_PP ${LV_MP}.pp)
 set(LV_MPY_METADATA ${LV_MP}.json)
-set(LV_PP_FILTERED ${LV_PP})
 set(LV_JSON ${CMAKE_BINARY_DIR}/lvgl_all.json)
-set(LVGL_ALL_H ${CMAKE_BINARY_DIR}/lvgl_all.h)
-
+set(LV_ALL_H ${CMAKE_BINARY_DIR}/lvgl_all.h)
+file(GLOB_RECURSE LV_HEADERS ${LVGL_DIR}/src/*.h ${LV_BINDINGS_DIR}/lv_conf.h)
 file(GLOB_RECURSE SOURCES ${LVGL_DIR}/src/*.c)
-file(GLOB_RECURSE LVGL_HEADERS ${LVGL_DIR}/src/*.h ${LV_BINDINGS_DIR}/lv_conf.h)
-
 
 message(STATUS "Starting the CMake configuration for Micropython with LVGL bindings")
 
 # Create lvgl_all.h file (if gen_json.py exists) and lvgl_all.json file
 if (EXISTS ${LVGL_DIR}/scripts/gen_json/gen_json.py)
-    set(LVGL_ALL_H ${CMAKE_BINARY_DIR}/lvgl_all.h)
     execute_process(
-        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/lvgl.h\"' > ${LVGL_ALL_H}"
-        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/src/lvgl_private.h\"' >> ${LVGL_ALL_H}"
-        COMMAND ${Python3_EXECUTABLE} ${LVGL_DIR}/scripts/gen_json/gen_json.py --target-header ${LVGL_ALL_H} > ${LV_JSON}
+        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/lvgl.h\"' > ${LV_ALL_H}"
+        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/src/lvgl_private.h\"' >> ${LV_ALL_H}"
+        COMMAND ${Python3_EXECUTABLE} ${LVGL_DIR}/scripts/gen_json/gen_json.py --target-header ${LV_ALL_H} > ${LV_JSON}
         RESULT_VARIABLE result
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
@@ -55,7 +49,7 @@ execute_process(
 
 # Create lv_mp.c file
 execute_process(
-    COMMAND /bin/sh -c "${Python3_EXECUTABLE} ${LV_BINDINGS_DIR}/gen/gen_mpy.py -M lvgl -MP lv -MD ${LV_MPY_METADATA} -E ${LV_PP_FILTERED} -J ${LV_JSON} ${LVGL_DIR}/lvgl.h > ${LV_MP} || (rm -f ${LV_MP} && /bin/false)"
+    COMMAND /bin/sh -c "${Python3_EXECUTABLE} ${LV_BINDINGS_DIR}/gen_mpy.py -M lvgl -MP lv -MD ${LV_MPY_METADATA} -E ${LV_PP} -J ${LV_JSON} ${LVGL_DIR}/lvgl.h > ${LV_MP} || (rm -f ${LV_MP} && /bin/false)"
     RESULT_VARIABLE result
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
@@ -76,7 +70,7 @@ target_compile_options(lvgl_interface INTERFACE -Wno-unused-function)
 
 # lvgl bindings target (the mpy module)
 add_library(usermod_lv_bindings INTERFACE)
-target_sources(usermod_lv_bindings INTERFACE ${LV_SRC})
+target_sources(usermod_lv_bindings INTERFACE ${LV_MP})
 target_include_directories(usermod_lv_bindings INTERFACE ${LV_INCLUDE})
 target_compile_options(usermod_lv_bindings INTERFACE ${LV_COMPILE_OPTIONS})
 

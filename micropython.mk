@@ -13,40 +13,44 @@
 ################################################################################
 # LVGL build rules
 
-LVGL_BINDING_DIR = $(USERMOD_DIR)
-LVGL_DIR = $(LVGL_BINDING_DIR)/lvgl
-INC += -I$(LVGL_BINDING_DIR)
-ALL_LVGL_SRC = $(shell find $(LVGL_DIR) -type f -name '*.h') $(LVGL_BINDING_DIR)/lv_conf.h
-LVGL_ALL_H = $(BUILD)/lvgl/lvgl_all.h
-LVGL_ALL_JSON = $(BUILD)/lvgl/lvgl_all.json
-LVGL_PP = $(BUILD)/lvgl/lvgl.pp.c
-LVGL_MPY = $(BUILD)/lvgl/lv_mpy.c
-LVGL_MPY_METADATA = $(BUILD)/lvgl/lv_mpy.json
-CFLAGS_USERMOD += $(LV_CFLAGS) 
+$(shell mkdir -p $(BUILD))
 
+LV_BINDINGS_DIR = $(USERMOD_DIR)
+LVGL_DIR = $(LV_BINDINGS_DIR)/lvgl
+LV_MP = $(BUILD)/lv_mp.c
+LV_INCLUDE += -I$(LV_BINDINGS_DIR)
+LV_PP = $(LV_MP).pp
+LV_MPY_METADATA = $(LV_MP).json
+LV_JSON = $(BUILD)/lvgl_all.json
+LV_ALL_H = $(BUILD)/lvgl_all.h
+LV_HEADERS = $(shell find $(LVGL_DIR) -type f -name '*.h') $(LV_BINDINGS_DIR)/lv_conf.h
+
+CFLAGS_USERMOD += $(LV_CFLAGS)
+CFLAGS_USERMOD += -I$(LV_BINDINGS_DIR)
+CFLAGS_USERMOD += -I$(LVGL_DIR)
+CFLAGS_USERMOD += -Wno-unused-function
+
+# Create lvgl_all.h file (if gen_json.py exists) and lvgl_all.json file
 ifneq (,$(wildcard $(LVGL_DIR)/scripts/gen_json/gen_json.py))
-$(LVGL_ALL_JSON): $(ALL_LVGL_SRC) $(LVGL_DIR)/scripts/gen_json/gen_json.py
+$(LV_JSON): $(LV_HEADERS) $(LVGL_DIR)/scripts/gen_json/gen_json.py
 	$(ECHO) "LVGL-JSON-GEN $@"
-	$(Q)mkdir -p $(dir $@)
-	$(ECHO) "#include \"$(LVGL_DIR)/lvgl.h\"\n#include \"$(LVGL_DIR)/src/lvgl_private.h\"" > $(LVGL_ALL_H)
-	$(Q)$(PYTHON) $(LVGL_DIR)/scripts/gen_json/gen_json.py --target-header $(LVGL_ALL_H) > $(LVGL_ALL_JSON)
+	$(ECHO) "#include \"$(LVGL_DIR)/lvgl.h\"\n#include \"$(LVGL_DIR)/src/lvgl_private.h\"" > $(LV_ALL_H)
+	$(Q)$(PYTHON) $(LVGL_DIR)/scripts/gen_json/gen_json.py --target-header $(LV_ALL_H) > $(LV_JSON)
 else
-$(LVGL_ALL_JSON):
+$(LV_JSON):
 	$(ECHO) "LVGL-JSON-GEN $@"
-	$(Q)mkdir -p $(dir $@)
-	$(ECHO) "{}" > $(LVGL_ALL_JSON)
+	$(ECHO) "{}" > $(LV_JSON)
 endif
 
-$(LVGL_MPY): $(ALL_LVGL_SRC) $(LVGL_BINDING_DIR)/gen/gen_mpy.py $(LVGL_ALL_JSON)
+# Create lv_mp.c.pp and lv_mp.c files
+$(LV_MP): $(LV_HEADERS) $(LV_BINDINGS_DIR)/gen_mpy.py $(LV_JSON)
 	$(ECHO) "LVGL-GEN $@"
-	$(Q)mkdir -p $(dir $@)
-	$(Q)$(CPP) $(CFLAGS_EXTMOD) -DPYCPARSER -x c -I $(LVGL_BINDING_DIR)/pycparser/utils/fake_libc_include $(INC) $(LVGL_DIR)/lvgl.h > $(LVGL_PP)
-	$(Q)$(PYTHON) $(LVGL_BINDING_DIR)/gen/gen_mpy.py -M lvgl -MP lv -MD $(LVGL_MPY_METADATA) -E $(LVGL_PP) -J $(LVGL_ALL_JSON) $(LVGL_DIR)/lvgl.h > $@
+	$(Q)$(CPP) $(CFLAGS_USERMOD) -DPYCPARSER -x c -I $(LV_BINDINGS_DIR)/pycparser/utils/fake_libc_include $(LV_INCLUDE) $(LVGL_DIR)/lvgl.h > $(LV_PP)
+	$(Q)$(PYTHON) $(LV_BINDINGS_DIR)/gen_mpy.py -M lvgl -MP lv -MD $(LV_MPY_METADATA) -E $(LV_PP) -J $(LV_JSON) $(LVGL_DIR)/lvgl.h > $@
 
-.PHONY: LVGL_MPY
-LVGL_ALL_JSON: $(LVGL_ALL_JSON)
-LVGL_MPY: $(LVGL_MPY)
+.PHONY: LV_MP
+LV_JSON: $(LV_JSON)
+LV_MP: $(LV_MP)
 
-CFLAGS_USERMOD += -Wno-unused-function
+SRC_USERMOD_C += $(LV_MP)
 SRC_THIRDPARTY_C += $(subst $(TOP)/,,$(shell find $(LVGL_DIR)/src -type f -name "*.c"))
-SRC_USERMOD += $(LVGL_MPY)
