@@ -1,6 +1,9 @@
+# This file is used by MicroPython CMake-based builds such as the ESP32 and RP2 ports.
+# For Make-based builds, see the .mk file in the same directory.
+
 # This file is to be given as 
 #     make USER_C_MODULES=../../../../lvmp/lvmp.cmake
-# when building Micropython port
+# when building Micropython.
 
 cmake_minimum_required(VERSION 3.12.4)
 
