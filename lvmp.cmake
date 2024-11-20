@@ -1,5 +1,5 @@
 # This file is to be given as 
-#     make USER_C_MODULES=../../../../lv_binding_micropython/lvgl.cmake
+#     make USER_C_MODULES=../../../../lvmp/lvmp.cmake
 # when building Micropython port
 
 cmake_minimum_required(VERSION 3.12.4)
