@@ -19,7 +19,7 @@ set(LV_MPY_METADATA ${LV_MP}.json)
 set(LV_JSON ${CMAKE_BINARY_DIR}/lvgl_all.json)
 set(LV_ALL_H ${CMAKE_BINARY_DIR}/lvgl_all.h)
 file(GLOB_RECURSE LV_HEADERS ${LVGL_DIR}/src/*.h ${LV_BINDINGS_DIR}/lv_conf.h)
-file(GLOB_RECURSE SOURCES ${LVGL_DIR}/src/*.c)
+file(GLOB_RECURSE SOURCES ${LV_BINDINGS_DIR}/lv_mem_core_micropython.c ${LVGL_DIR}/src/*.c)
 
 message(STATUS "Starting the CMake configuration for Micropython with LVGL bindings")
 

@@ -17,6 +17,8 @@
 #ifndef LV_CONF_H
 #define LV_CONF_H
 
+#define LV_STDLIB_MICROPYTHON_OVERRIDE  254
+
 /*If you need to include anything here, do it inside the `__ASSEMBLY__` guard */
 #if  0 && defined(__ASSEMBLY__)
 #include "my_include.h"
@@ -40,7 +42,7 @@
  * - LV_STDLIB_RTTHREAD:    RT-Thread implementation
  * - LV_STDLIB_CUSTOM:      Implement the functions externally
  */
-#define LV_USE_STDLIB_MALLOC    LV_STDLIB_MICROPYTHON
+#define LV_USE_STDLIB_MALLOC    LV_STDLIB_MICROPYTHON_OVERRIDE
 #define LV_USE_STDLIB_STRING    LV_STDLIB_BUILTIN
 #define LV_USE_STDLIB_SPRINTF   LV_STDLIB_BUILTIN
 

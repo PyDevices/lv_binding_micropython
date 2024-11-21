@@ -25,10 +25,14 @@ LV_JSON = $(BUILD)/lvgl_all.json
 LV_ALL_H = $(BUILD)/lvgl_all.h
 LV_HEADERS = $(shell find $(LVGL_DIR) -type f -name '*.h') $(LV_BINDINGS_DIR)/lv_conf.h
 
-CFLAGS_USERMOD += $(LV_CFLAGS)
-CFLAGS_USERMOD += -I$(LV_BINDINGS_DIR)
 CFLAGS_USERMOD += -I$(LVGL_DIR)
+CFLAGS_USERMOD += -I$(LV_BINDINGS_DIR)
+CFLAGS_USERMOD += $(LV_CFLAGS)
 CFLAGS_USERMOD += -Wno-unused-function
+
+SRC_USERMOD_LIB_C += $(LV_BINDINGS_DIR)/lv_mem_core_micropython.c
+SRC_USERMOD_LIB_C += $(shell find $(LVGL_DIR)/src -type f -name "*.c")
+SRC_USERMOD_C += $(LV_MP)
 
 # Create lvgl_all.h file (if gen_json.py exists) and lvgl_all.json file
 ifneq (,$(wildcard $(LVGL_DIR)/scripts/gen_json/gen_json.py))
@@ -51,6 +55,3 @@ $(LV_MP): $(LV_HEADERS) $(LV_BINDINGS_DIR)/gen_mpy.py $(LV_JSON)
 .PHONY: LV_MP
 LV_JSON: $(LV_JSON)
 LV_MP: $(LV_MP)
-
-SRC_USERMOD_C += $(LV_MP)
-SRC_THIRDPARTY_C += $(subst $(TOP)/,,$(shell find $(LVGL_DIR)/src -type f -name "*.c"))
