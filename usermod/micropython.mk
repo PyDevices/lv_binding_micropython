@@ -2,7 +2,7 @@
 # For CMake-based builds, see the .cmake file in the same directory.
 
 # This directory containing this file is to be given as 
-#     make USER_C_MODULES=../../../../lvmp
+#     make USER_C_MODULES=../../../lv_micropython_cmod
 # when building Micropython.
 
 # See
@@ -15,22 +15,21 @@
 
 $(shell mkdir -p $(BUILD))
 
-LV_BINDINGS_DIR = $(USERMOD_DIR)
-LVGL_DIR = $(LV_BINDINGS_DIR)/lvgl
+LV_MICROPYTHON_DIR = $(USERMOD_DIR)/..
+LVGL_DIR = $(LV_MICROPYTHON_DIR)/lvgl
 LV_MP = $(BUILD)/lv_mp.c
-LV_INCLUDE += -I$(LV_BINDINGS_DIR)
 LV_PP = $(LV_MP).pp
 LV_MPY_METADATA = $(LV_MP).json
 LV_JSON = $(BUILD)/lvgl_all.json
 LV_ALL_H = $(BUILD)/lvgl_all.h
-LV_HEADERS = $(shell find $(LVGL_DIR) -type f -name '*.h') $(LV_BINDINGS_DIR)/lv_conf.h
+LV_HEADERS = $(shell find $(LVGL_DIR) -type f -name '*.h') $(LV_MICROPYTHON_DIR)/lv_conf.h
 
 CFLAGS_USERMOD += -I$(LVGL_DIR)
-CFLAGS_USERMOD += -I$(LV_BINDINGS_DIR)
+CFLAGS_USERMOD += -I$(LV_MICROPYTHON_DIR)
 CFLAGS_USERMOD += $(LV_CFLAGS)
 CFLAGS_USERMOD += -Wno-unused-function
 
-SRC_USERMOD_LIB_C += $(LV_BINDINGS_DIR)/lv_mem_core_micropython.c
+SRC_USERMOD_LIB_C += $(LV_MICROPYTHON_DIR)/lv_mem_core_micropython.c
 SRC_USERMOD_LIB_C += $(shell find $(LVGL_DIR)/src -type f -name "*.c")
 SRC_USERMOD_C += $(LV_MP)
 
@@ -47,10 +46,10 @@ $(LV_JSON):
 endif
 
 # Create lv_mp.c.pp and lv_mp.c files
-$(LV_MP): $(LV_HEADERS) $(LV_BINDINGS_DIR)/gen_mpy.py $(LV_JSON)
+$(LV_MP): $(LV_HEADERS) $(LV_MICROPYTHON_DIR)/gen_mpy.py $(LV_JSON)
 	$(ECHO) "LVGL-GEN $@"
-	$(Q)$(CPP) $(CFLAGS_USERMOD) -DPYCPARSER -x c -I $(LV_BINDINGS_DIR)/pycparser/utils/fake_libc_include $(LV_INCLUDE) $(LVGL_DIR)/lvgl.h > $(LV_PP)
-	$(Q)$(PYTHON) $(LV_BINDINGS_DIR)/gen_mpy.py -M lvgl -MP lv -MD $(LV_MPY_METADATA) -E $(LV_PP) -J $(LV_JSON) $(LVGL_DIR)/lvgl.h > $@
+	$(Q)$(CPP) $(CFLAGS_USERMOD) -DPYCPARSER -x c -I $(LV_MICROPYTHON_DIR)/pycparser/utils/fake_libc_include -I$(LV_MICROPYTHON_DIR) $(LVGL_DIR)/lvgl.h > $(LV_PP)
+	$(Q)$(PYTHON) $(LV_MICROPYTHON_DIR)/gen_mpy.py -M lvgl -MP lv -MD $(LV_MPY_METADATA) -E $(LV_PP) -J $(LV_JSON) $(LVGL_DIR)/lvgl.h > $@
 
 .PHONY: LV_MP
 LV_JSON: $(LV_JSON)
