@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
+set -e
+
 BOARD=RPI_PICO
 VARIANT=
 
 REPO_DIR=$(pwd)
 PORT_DIR=$REPO_DIR/../micropython/ports/rp2
 MODULES=$REPO_DIR/usermod/micropython.cmake
-MANIFEST=$REPO_DIR/../pydisplay/manifest.py
+MANIFEST=$REPO_DIR/manifest.py
 BUILD_DIR=$PORT_DIR/build
 if [ -n "$BOARD" ]; then
     BUILD_DIR=$BUILD_DIR-$BOARD
@@ -15,12 +17,10 @@ if [ -n "$VARIANT" ]; then
     BUILD_DIR=$BUILD_DIR-$VARIANT
 fi
 
-set -e
-
 pushd $PORT_DIR
 make -j BOARD=$BOARD BOARD_VARIANT=$VARIANT clean
 make -j BOARD=$BOARD BOARD_VARIANT=$VARIANT submodules
-make -j BOARD=$BOARD BOARD_VARIANT=$VARIANT all USER_C_MODULES=../../../lv_micropython_cmod/usermod/micropython.cmake # FROZEN_MANIFEST=$MANIFEST
+make -j BOARD=$BOARD BOARD_VARIANT=$VARIANT all USER_C_MODULES=$MODULES FROZEN_MANIFEST=$MANIFEST
 popd
 
 echo

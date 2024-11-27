@@ -1,70 +1,38 @@
 # This file is used by MicroPython CMake-based builds such as the ESP32 and RP2 ports.
 # For Make-based builds, see the .mk file in the same directory.
 
-# This file is to be given as 
+# When building Micropython, this file is to be given as:
+#   for esp32:
 #     make USER_C_MODULES=../../../../lv_micropython_cmod/usermod/micropython.cmake
-# when building Micropython.
-
-cmake_minimum_required(VERSION 3.12.4)
+#   for rp2 and most other (CMake-based) ports:
+#     make USER_C_MODULES=../../../lv_micropython_cmod/usermod/micropython.cmake
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-set(LV_MICROPYTHON_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
-set(LVGL_DIR ${LV_MICROPYTHON_DIR}/lvgl)
-set(LV_MP ${CMAKE_BINARY_DIR}/lv_mp.c)
-set(LV_PP ${LV_MP}.pp)
-set(LV_MPY_METADATA ${LV_MP}.json)
-set(LV_JSON ${CMAKE_BINARY_DIR}/lvgl_all.json)
-set(LV_ALL_H ${CMAKE_BINARY_DIR}/lvgl_all.h)
-file(GLOB_RECURSE LV_HEADERS ${LVGL_DIR}/src/*.h ${LV_MICROPYTHON_DIR}/lv_conf.h)
-file(GLOB_RECURSE SOURCES ${LV_MICROPYTHON_DIR}/lv_mem_core_micropython.c ${LVGL_DIR}/src/*.c)
+set(LVMP_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+set(LVMP_C ${CMAKE_BINARY_DIR}/lvmp.c)
+set(LVMP_PP ${LVMP_C}.pp)
+set(LVMP_JSON ${LVMP_C}.json)
+set(LVGL_DIR ${LVMP_DIR}/lvgl)
+file(GLOB_RECURSE SOURCES ${LVGL_DIR}/src/*.c ${LVMP_DIR}/lv_mem_core_micropython.c)
 
-# Create lvgl_all.h file (if gen_json.py exists) and lvgl_all.json file
-if (EXISTS ${LVGL_DIR}/scripts/gen_json/gen_json.py)
-    execute_process(
-        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/lvgl.h\"' > ${LV_ALL_H}"
-        COMMAND /bin/sh -c "echo '#include \"${LVGL_DIR}/src/lvgl_private.h\"' >> ${LV_ALL_H}"
-        COMMAND ${Python3_EXECUTABLE} ${LVGL_DIR}/scripts/gen_json/gen_json.py --target-header ${LV_ALL_H} > ${LV_JSON}
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-else()
-    execute_process(
-        COMMAND /bin/sh -c "echo '{}' > ${LV_JSON}"
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-endif()
-
-# Create lv_mp.c.pp and lv_mp.c files
+# Create lvmp.c.pp file
 execute_process(
-    COMMAND /bin/sh -c "${CMAKE_C_COMPILER} -E -DPYCPARSER ${LV_COMPILE_OPTIONS} ${LV_PP_OPTIONS} '${LV_CFLAGS}' -I ${LV_MICROPYTHON_DIR}/pycparser/utils/fake_libc_include ${MICROPY_CPP_FLAGS} ${LVGL_DIR}/lvgl.h > ${LV_PP}"
-    COMMAND /bin/sh -c "${Python3_EXECUTABLE} ${LV_MICROPYTHON_DIR}/gen_mpy.py -M lvgl -MP lv -MD ${LV_MPY_METADATA} -E ${LV_PP} -J ${LV_JSON} ${LVGL_DIR}/lvgl.h > ${LV_MP} || (rm -f ${LV_MP} && /bin/false)"
-    RESULT_VARIABLE result
+    COMMAND /bin/sh -c "${CMAKE_C_COMPILER} ${LV_CFLAGS} -E -DPYCPARSER -I ${LVMP_DIR}/pycparser/utils/fake_libc_include ${LVGL_DIR}/lvgl.h > ${LVMP_PP}"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-add_library(lvgl_interface INTERFACE)
-# ${SOURCES} must NOT be given to add_library directly for some reason (won't be built)
-target_sources(lvgl_interface INTERFACE ${SOURCES})
-# Micropython builds with -Werror; we need to suppress some warnings, such as:
-#
-# /home/test/build/lv_micropython/ports/rp2/build-PICO/lv_mp.c:29316:16: error:
-# 'lv_style_transition_dsc_t_path_xcb_callback' defined but not used
-# [-Werror=unused-function] 29316 | STATIC int32_t
-# lv_style_transition_dsc_t_path_xcb_callback(const lv_anim_t * arg0) |
-# ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-target_compile_options(lvgl_interface INTERFACE -Wno-unused-function)
+# Create lvmp.c.json and lvmp.c files
+execute_process(
+    COMMAND /bin/sh -c "${Python3_EXECUTABLE} ${LVMP_DIR}/gen_mpy.py -M lvgl -MP lv -MD ${LVMP_JSON} -E ${LVMP_PP} ${LVGL_DIR}/lvgl.h > ${LVMP_C} || (rm -f ${LVMP_C} && /bin/false)"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
 
+add_library(lv_micropython INTERFACE)
+target_sources(lv_micropython INTERFACE ${LVMP_C})
+target_link_libraries(usermod INTERFACE lv_micropython)
 
-# lvgl bindings target (the mpy module)
-add_library(usermod_lv_bindings INTERFACE)
-target_sources(usermod_lv_bindings INTERFACE ${LV_MP})
-target_include_directories(usermod_lv_bindings INTERFACE ${LV_MICROPYTHON_DIR})
-target_compile_options(usermod_lv_bindings INTERFACE ${LV_COMPILE_OPTIONS})
-
-
-target_link_libraries(usermod_lv_bindings INTERFACE lvgl_interface)
-# make usermod (target declared by Micropython for all user compiled modules) link to bindings
-# this way the bindings (and transitively lvgl_interface) get proper compilation flags
-target_link_libraries(usermod INTERFACE usermod_lv_bindings)
+add_library(lvgl INTERFACE)
+target_sources(lvgl INTERFACE ${SOURCES})
+target_compile_options(lvgl INTERFACE -Wno-unused-function)
+target_link_libraries(lv_micropython INTERFACE lvgl)
