@@ -2,11 +2,11 @@
 # For CMake-based builds, see the .cmake file in the same directory.
 
 # When building Micropython, the parent directory of this file's parent directory is to be given as:
-#     make USER_C_MODULES=../../../lv_micropython_cmod
+#     make USER_C_MODULES=../../../
 
 $(shell mkdir -p $(BUILD))
 
-LVMP_DIR = $(USERMOD_DIR)/..
+LVMP_DIR = $(USERMOD_DIR)/../lv_micropython_cmod
 LVMP_C = $(BUILD)/lvmp.c
 LVMP_PP = $(LVMP_C).pp
 LVMP_JSON = $(LVMP_C).json

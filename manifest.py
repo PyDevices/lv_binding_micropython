@@ -2,8 +2,10 @@ metadata(
     description="lv_micropython modules",
     version="0.0.0",
 )
+
 module("lv_utils.py", base_path="./lib", opt=3)
 module("lv_timer.py", base_path="./lib", opt=3)
+
 try:
     include("$(BOARD_DIR)/manifest.py")
 except Exception:

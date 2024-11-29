@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
+set -e
+
 REPO_DIR=$(pwd)
 PORT_DIR=$REPO_DIR/../micropython/ports/unix
-MODULES=$REPO_DIR
+MODULES=$REPO_DIR/..
 MANIFEST=$REPO_DIR/manifest.py
 BUILD_DIR=$PORT_DIR/build-standard
-
-set -e
+COPY_TO=~/bin/lv
 
 pushd $PORT_DIR
 make -j clean
@@ -15,13 +16,15 @@ make -j USER_C_MODULES=$MODULES FROZEN_MANIFEST=$MANIFEST
 popd
 
 echo
-echo "The firmware is:  $BUILD_DIR/micropython"
+echo "The executable is:  $BUILD_DIR/micropython"
 echo
 
-read -p "Do you want to create a link to the firmware as ~/bin/lv? [y/N] " -n 1 -r
+echo "Do you want to copy the executable to $COPY_TO?"
+read -p "[y/N]: " -n 1 -r
+echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     mkdir -p ~/bin
-    ln -s $BUILD_DIR/micropython ~/bin/lv
-    echo "Link created as ~/bin/lv"
+    cp $BUILD_DIR/micropython $COPY_TO
+    echo "Executable copied to $COPY_TO"
 fi
 echo

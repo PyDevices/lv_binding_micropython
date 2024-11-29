@@ -7,7 +7,7 @@ BOARD=ESP32_GENERIC_S3
 
 REPO_DIR=$(pwd)
 PORT_DIR=$REPO_DIR/../micropython/ports/esp32
-MODULES=$REPO_DIR/usermod/micropython.cmake
+MODULES=$REPO_DIR/bundle.cmake
 MANIFEST=$REPO_DIR/manifest.py
 BUILD_DIR=$PORT_DIR/build
 if [ -n "$BOARD" ]; then
@@ -17,7 +17,8 @@ if [ -n "$VARIANT" ]; then
     BUILD_DIR=$BUILD_DIR-$VARIANT
 fi
 
-. $REPO_DIR/../esp-idf/export.sh
+IDF_DIR=$REPO_DIR/../esp-idf
+. $IDF_DIR/export.sh
 
 pushd $PORT_DIR
 make -j BOARD=$BOARD BOARD_VARIANT=$VARIANT clean

@@ -3,13 +3,13 @@
 
 # When building Micropython, this file is to be given as:
 #   for esp32:
-#     make USER_C_MODULES=../../../../lv_micropython_cmod/usermod/micropython.cmake
+#     make USER_C_MODULES=../../../../lv_micropython_cmod/micropython.cmake
 #   for rp2 and most other (CMake-based) ports:
-#     make USER_C_MODULES=../../../lv_micropython_cmod/usermod/micropython.cmake
+#     make USER_C_MODULES=../../../lv_micropython_cmod/micropython.cmake
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-set(LVMP_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+set(LVMP_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(LVMP_C ${CMAKE_BINARY_DIR}/lvmp.c)
 set(LVMP_PP ${LVMP_C}.pp)
 set(LVMP_JSON ${LVMP_C}.json)
