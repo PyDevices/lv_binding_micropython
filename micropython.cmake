@@ -2,10 +2,8 @@
 # For Make-based builds, see the .mk file in the same directory.
 
 # When building Micropython, this file is to be given as:
-#   for esp32:
-#     make USER_C_MODULES=../../../../lv_micropython_cmod/micropython.cmake
-#   for rp2 and most other (CMake-based) ports:
-#     make USER_C_MODULES=../../../lv_micropython_cmod/micropython.cmake
+#     make USER_C_MODULES=<path to this directory>/micropython.cmake
+
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 

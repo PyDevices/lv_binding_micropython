@@ -2,7 +2,7 @@
 # For CMake-based builds, see the .cmake file in the same directory.
 
 # When building Micropython, the parent directory of this file's parent directory is to be given as:
-#     make USER_C_MODULES=../../../
+#     make USER_C_MODULES=<path to this directory>
 
 $(shell mkdir -p $(BUILD))
 
